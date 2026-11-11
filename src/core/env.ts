@@ -1,4 +1,4 @@
-﻿import { alphaOf } from './constants';
+import { alphaOf } from './constants';
 
 export interface PageBg {
   color: string;

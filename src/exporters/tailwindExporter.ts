@@ -26,10 +26,10 @@ export function extractTailwind(el: HTMLElement): string {
   }
 
   // Padding
-  const pt = parseInt(cs.paddingTop) || 0;
-  const pr = parseInt(cs.paddingRight) || 0;
-  const pb = parseInt(cs.paddingBottom) || 0;
-  const pl = parseInt(cs.paddingLeft) || 0;
+  const pt = parseFloat(cs.paddingTop) || 0;
+  const pr = parseFloat(cs.paddingRight) || 0;
+  const pb = parseFloat(cs.paddingBottom) || 0;
+  const pl = parseFloat(cs.paddingLeft) || 0;
   if (pt === pr && pr === pb && pb === pl && pt > 0) {
     classes.push(`p-[${pt}px]`);
   } else {
@@ -77,7 +77,7 @@ export function extractTailwind(el: HTMLElement): string {
   const col = cs.color;
   if (col) classes.push(arbitrary('text', col));
 
-  const fs = parseInt(cs.fontSize) || 0;
+  const fs = parseFloat(cs.fontSize) || 0;
   if (fs > 0) classes.push(`text-[${fs}px]`);
 
   const fw = parseInt(cs.fontWeight) || 400;
@@ -90,8 +90,13 @@ export function extractTailwind(el: HTMLElement): string {
 
 export function exportCleanHTML(el: HTMLElement, utilityClasses = ''): string {
   const clone = el.cloneNode(true) as HTMLElement;
+  if (clone.matches('script')) return '';
   if (utilityClasses) clone.classList.add(...utilityClasses.split(/\s+/).filter(Boolean));
-  clone.removeAttribute('data-sf-id');
-  clone.querySelectorAll('[data-sf-id]').forEach((c) => c.removeAttribute('data-sf-id'));
+  clone.querySelectorAll('script').forEach((script) => script.remove());
+  for (const node of [clone, ...clone.querySelectorAll('*')]) {
+    for (const attribute of Array.from(node.attributes)) {
+      if (attribute.name.toLowerCase().startsWith('on')) node.removeAttribute(attribute.name);
+    }
+  }
   return clone.outerHTML;
 }

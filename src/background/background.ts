@@ -54,7 +54,7 @@ async function injectSiteForge(tab: chrome.tabs.Tab): Promise<void> {
       },
     });
 
-    const { running, media } = probe.result || {};
+    const { running, media } = probe?.result || {};
 
     if (!running && media) {
       try {
@@ -90,8 +90,10 @@ async function injectSiteForge(tab: chrome.tabs.Tab): Promise<void> {
     await chrome.action.setBadgeText({ tabId: tab.id, text: '×' });
     await chrome.action.setTitle({ tabId: tab.id, title: "SiteForge can't run on this page" });
     setTimeout(() => {
-      chrome.action.setBadgeText({ tabId: tab.id, text: '' });
-      chrome.action.setTitle({ tabId: tab.id, title: 'SiteForge Blueprint (Alt+Shift+B)' });
+      chrome.action.setBadgeText({ tabId: tab.id, text: '' }).catch(() => {});
+      chrome.action
+        .setTitle({ tabId: tab.id, title: 'SiteForge Blueprint (Alt+Shift+B)' })
+        .catch(() => {});
     }, 2500);
   }
 }

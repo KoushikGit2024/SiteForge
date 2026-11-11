@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { RULER, cursorSVG, HOT, f1, clamp, RED, BLUE, IMG_ICON } from '../core/constants';
 import { STYLE } from './styles';
 import { reveal, prepText } from '../core/textReveal';
@@ -18,13 +18,14 @@ export class View {
 <div class="bg" aria-hidden="true"></div>
 <div class="cad-grid" aria-hidden="true"></div>
 <div class="pulse-band" aria-hidden="true"></div>
-<div class="layer under" aria-hidden="true"></div>
-<div class="port" aria-hidden="true"><div class="world"></div></div>
-<div class="layer over" aria-hidden="true"></div>
+<div class="layer under" aria-hidden="true" inert></div>
+<div class="port" aria-hidden="true" inert><div class="world"></div></div>
+<div class="layer over" aria-hidden="true" inert></div>
 <div class="intro" aria-hidden="true"></div>
 <svg class="ov" aria-hidden="true"></svg>
 <div class="badges" aria-hidden="true"></div>
 <div class="cursors" aria-hidden="true"></div>
+<div class="sf-inspect-box" aria-hidden="true" inert hidden></div>
 <div class="rulers" aria-hidden="true"></div>
 <div class="hud" role="group" aria-label="SiteForge controls">
   <span class="title-tag">SITEFORGE</span>
@@ -59,6 +60,8 @@ export class View {
     this._rulersOn = false;
     this.modelItems = [];
     this.inspectorBadge = $('.sf-inspector-badge');
+    this.inspectBox = $('.sf-inspect-box');
+    this.inspectedItem = null;
 
     const pb = env.pageBg || { color: 'rgb(255, 255, 255)', image: 'none' };
     const pbColor = typeof pb === 'string' ? pb : pb.color || 'rgb(255, 255, 255)';
@@ -78,7 +81,7 @@ export class View {
   }
 
   makeIntroLogo() {
-    this.intro.innerHTML = '<div class="logo-box">SITEFORGE // ARCHITECTURAL SURVEYOR</div>';
+    this.intro.innerHTML = '<div class="logo-box">SITEFORGE : RECONSTRUCTION PAGE</div>';
   }
 
   measure() {
@@ -170,7 +173,9 @@ export class View {
   }
 
   showInspector(it, x, y) {
-    if (!it || !(it.source instanceof HTMLElement)) {
+    this.inspectedItem = it && it.source instanceof HTMLElement ? it : null;
+    this.placeInspectBox();
+    if (!this.inspectedItem) {
       this.inspectorBadge.hidden = true;
       return;
     }
@@ -178,6 +183,21 @@ export class View {
     this.inspectorBadge.hidden = false;
     this.inspectorBadge.style.left = `${Math.min(this.W - 120, Math.max(8, x + 12))}px`;
     this.inspectorBadge.style.top = `${Math.min(this.H - 28, Math.max(8, y + 12))}px`;
+  }
+
+  placeInspectBox() {
+    const it = this.inspectedItem;
+    if (!it) {
+      this.inspectBox.hidden = true;
+      return;
+    }
+    const bounds = it.source.getBoundingClientRect();
+    const style = this.inspectBox.style;
+    style.left = `${bounds.left}px`;
+    style.top = `${bounds.top}px`;
+    style.width = `${bounds.width}px`;
+    style.height = `${bounds.height}px`;
+    this.inspectBox.hidden = false;
   }
 
   makeNode(it) {
@@ -279,15 +299,15 @@ export class View {
           old.replaceWith(m);
         } else n.appendChild(m);
         n._src = src;
+        let fr = n.querySelector('.fr');
         if (src.frame) {
-          let fr = n.querySelector('.fr');
           if (!fr) {
             fr = document.createElement('div');
             fr.className = 'fr';
             n.appendChild(fr);
           }
           fr.setAttribute('style', src.frame + `border-radius:${src.radius};`);
-        }
+        } else if (fr) fr.remove();
       }
       n.classList.toggle('st', !!it.styled);
       n.style.borderRadius = it.styled ? src.radius : '0px';
@@ -340,6 +360,7 @@ export class View {
       if (!el) {
         el = document.createElement('div');
         el.className = 'cursor';
+        el.style.color = c.color;
         el.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28"></svg>';
         this.cursorsEl.appendChild(el);
         this.cursorEls.set(c.id, el);
@@ -530,6 +551,7 @@ export class View {
     this.renderOverlay(E);
     this.renderCursors(E);
     this.renderRulers(E);
+    this.placeInspectBox();
   }
 }
 

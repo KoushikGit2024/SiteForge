@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { SVGNS, alphaOf, intersect, ltrb, MAX_ITEMS, MAX_WORLD_H, clamp } from './constants';
 // ------------------------------------------------------------------ capture
 

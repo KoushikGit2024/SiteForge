@@ -45,6 +45,8 @@ export const STYLE = `
 .badge{position:absolute;transform:translate(-50%);padding:1px 5px;background:#0F172A;border:1px solid rgba(255,255,255,.2);color:#E2E8F0;font:600 10px/14px ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;letter-spacing:0.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .cursor{position:absolute;left:0;top:0;width:8px;height:8px;border:1px solid currentColor;border-radius:50%;will-change:transform;opacity:.85}
 .cursor svg{position:absolute;overflow:visible;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.sf-inspect-box{position:fixed;pointer-events:none;border:1px solid #38BDF8;background:rgba(56,189,248,.12);z-index:9998}
+.sf-inspect-box[hidden]{display:none}
 
 /* Technical Rulers */
 .rulers{position:absolute;inset:0;pointer-events:none}

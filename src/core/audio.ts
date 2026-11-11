@@ -254,45 +254,39 @@ class AudioSynthesizer {
     if (!this.enabled || !this.active) return;
     const ctx = this.ensureGraph();
     if (!ctx) return;
-    const play = () => {
-      if (!this.ready()) return;
-      this.playVoice((context, when, output, voice, addSource) => {
-        this.addNoise(context, when, 0.12, 520, 0.9, 0.022, output, voice, addSource, 1850);
-        this.addOscillator(
-          context,
-          when + 0.045,
-          0.16,
-          240,
-          360,
-          0.032,
-          'triangle',
-          output,
-          voice,
-          addSource,
-        );
-        this.addOscillator(
-          context,
-          when + 0.14,
-          0.2,
-          360,
-          520,
-          0.022,
-          'sine',
-          output,
-          voice,
-          addSource,
-        );
-      }, true);
-      this.trace('start', {});
-    };
-    if (ctx.state === 'running') {
-      play();
+    if (ctx.state !== 'running') {
+      this.trace('start-skipped', { state: ctx.state });
       return;
     }
-    ctx
-      .resume()
-      .then(play)
-      .catch(() => this.trace('start-unlock-failed', {}));
+    if (!this.ready()) return;
+    this.playVoice((context, when, output, voice, addSource) => {
+      this.addNoise(context, when, 0.12, 520, 0.9, 0.022, output, voice, addSource, 1850);
+      this.addOscillator(
+        context,
+        when + 0.045,
+        0.16,
+        240,
+        360,
+        0.032,
+        'triangle',
+        output,
+        voice,
+        addSource,
+      );
+      this.addOscillator(
+        context,
+        when + 0.14,
+        0.2,
+        360,
+        520,
+        0.022,
+        'sine',
+        output,
+        voice,
+        addSource,
+      );
+    }, true);
+    this.trace('start', {});
   }
 
   public drag(

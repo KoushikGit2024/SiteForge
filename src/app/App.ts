@@ -8,6 +8,7 @@ import { Engine } from '../engine/Engine';
 import { extractTailwind, exportCleanHTML } from '../exporters/tailwindExporter';
 
 let lastShot: any = null;
+let lastShotCleanup: ReturnType<typeof setTimeout> | null = null;
 
 function stop(reveal?: boolean) {
   sound.stop();
@@ -32,8 +33,21 @@ export class App {
   async loadShot() {
     let src = window.__siteForgeShot;
     window.__siteForgeShot = null;
-    if (src) lastShot = { src, at: this.env.geom() };
-    else if (lastShot) src = lastShot.src; // Replay reuses the click-time screenshot
+    if (src) {
+      const cached = { src, at: this.env.geom(), href: location.href, ts: Date.now() };
+      lastShot = cached;
+      if (lastShotCleanup !== null) clearTimeout(lastShotCleanup);
+      lastShotCleanup = setTimeout(() => {
+        if (lastShot === cached) lastShot = null;
+        lastShotCleanup = null;
+      }, 60000);
+    } else if (lastShot && lastShot.href === location.href && Date.now() - lastShot.ts < 60000)
+      src = lastShot.src;
+    else {
+      lastShot = null;
+      if (lastShotCleanup !== null) clearTimeout(lastShotCleanup);
+      lastShotCleanup = null;
+    }
     if (!src) return null;
     const img = new Image();
     img.src = src;
@@ -71,9 +85,11 @@ export class App {
       mark('scan');
       if (this.dead) return;
       await Promise.race([document.fonts.ready, sleep(1200)]);
+      if (this.dead) return;
       mark('fonts');
       this.view.measure();
       const shot = await shotP;
+      if (this.dead) return;
       if (shot) {
         const g = this.env.geom();
         shot.valid = Math.abs(g.sx - shot.sx) < 1 && Math.abs(g.sy - shot.sy) < 1;
@@ -226,6 +242,12 @@ export class App {
         this.exportMode = !this.exportMode;
         b.classList.toggle('on', this.exportMode);
         b.setAttribute('aria-pressed', String(this.exportMode));
+        if (this.exportMode) {
+          clearTimeout(this.dismissTimer);
+          this.dismissTimer = null;
+        } else if (this.complete && !this.dismissTimer) {
+          this.dismissTimer = setTimeout(() => stop(true), 1500);
+        }
         this.inspected = null;
         this.view.showInspector(null);
         return;
@@ -277,6 +299,11 @@ export class App {
           : candidates.length - 1
         : (current + direction + candidates.length) % candidates.length;
     this.inspected = candidates[next];
+    this.inspected.source.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+      behavior: 'instant',
+    });
     const bounds = this.inspected.source.getBoundingClientRect();
     this.view.showInspector(
       this.inspected,
@@ -382,7 +409,7 @@ export class App {
     v.accessibleStatus.textContent = `Rebuilt by ${workers} agents in ${secs} seconds.`;
     v.barFill.style.width = '100%';
     v.dots.innerHTML = '';
-    if (!this.dismissTimer) {
+    if (!this.dismissTimer && !this.exportMode) {
       this.dismissTimer = setTimeout(() => stop(true), 1500);
     }
   }

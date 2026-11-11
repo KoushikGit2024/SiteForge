@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SiteForge",
+  "minimum_chrome_version": "110",
   "version": "1.0.0",
   "description": "Deconstruct any webpage into an architectural CAD blueprint, inspect layout metrics, and export clean components.",
   "permissions": ["activeTab", "scripting", "storage"],
